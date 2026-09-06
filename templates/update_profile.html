@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}Update Profile — ArthaSetu{% endblock %}
+
+{% block content %}
+<div class="page-header-bar">
+    <div class="container">
+        <h2 class="page-title"><i class="bi bi-person-gear me-2 text-warning"></i>Update Worker Profile</h2>
+    </div>
+</div>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="as-card p-4">
+                <form method="POST" action="{{ url_for('update_worker_profile') }}">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label as-label">Skill Category *</label>
+                            <select name="skill_category" class="form-select as-input" required>
+                                {% for skill in ['Plumber','Electrician','Carpenter','Painter','Cleaner',
+                                                  'AC Mechanic','Mason','Welder','Gardener','Driver',
+                                                  'Cook','Security Guard','Tailor','Computer Technician','Other'] %}
+                                <option value="{{ skill }}" {% if profile and profile.skill_category == skill %}selected{% endif %}>
+                                    {{ skill }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label as-label">Years of Experience</label>
+                            <div class="input-group as-input-group">
+                                <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+                                <input type="number" name="experience_years" class="form-control as-input"
+                                       min="0" max="50"
+                                       value="{{ profile.experience_years if profile else 0 }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label as-label">Phone Number</label>
+                            <div class="input-group as-input-group">
+                                <span class="input-group-text"><i class="bi bi-phone"></i></span>
+                                <input type="tel" name="phone" class="form-control as-input"
+                                       value="{{ profile.phone if profile else '' }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label as-label">Availability</label>
+                            <select name="availability" class="form-select as-input">
+                                {% for av in ['available','busy','offline'] %}
+                                <option value="{{ av }}" {% if profile and profile.availability == av %}selected{% endif %}>
+                                    {{ av.title() }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label as-label">Address</label>
+                            <div class="input-group as-input-group">
+                                <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                                <input type="text" name="address" class="form-control as-input"
+                                       placeholder="e.g. Arera Colony, Bhopal"
+                                       value="{{ profile.address if profile else '' }}">
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label as-label">About / Short Description</label>
+                            <textarea name="description" class="form-control as-input" rows="3"
+                                      placeholder="Describe your skills and experience...">{{ profile.description if profile else '' }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-3 mt-4">
+                        <button type="submit" class="btn btn-as-orange flex-grow-1">
+                            <i class="bi bi-check-lg me-2"></i>Save Profile
+                        </button>
+                        <a href="{{ url_for('worker_dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

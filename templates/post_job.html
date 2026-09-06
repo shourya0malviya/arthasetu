@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+{% block title %}Post a Job — ArthaSetu{% endblock %}
+
+{% block content %}
+<div class="page-header-bar">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('home') }}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('client_dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Post Job</li>
+            </ol>
+        </nav>
+        <h2 class="page-title"><i class="bi bi-plus-circle me-2 text-warning"></i>Post a New Job</h2>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row g-4">
+        <!-- Main Form -->
+        <div class="col-lg-7">
+            <div class="as-card p-4">
+                <h5 class="mb-1">Describe what you need</h5>
+                <p class="text-muted small mb-4">Write in plain language — Hindi or English both work!</p>
+
+                <form method="POST" action="{{ url_for('post_job') }}" id="jobForm">
+                    <div class="mb-3">
+                        <label class="form-label as-label">Job Title (Optional)</label>
+                        <div class="input-group as-input-group">
+                            <span class="input-group-text"><i class="bi bi-tag"></i></span>
+                            <input type="text" name="title" class="form-control as-input"
+                                   placeholder="e.g. Kitchen pipe repair">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label as-label">
+                            Work Description *
+                            <span class="badge bg-warning text-dark ms-2">AI will read this</span>
+                        </label>
+                        <textarea name="description" id="jobDesc" class="form-control as-input"
+                                  rows="5" placeholder="Describe your work need in plain words...
+Examples:
+• 'Mera kitchen ka pipe leak ho raha hai, urgent plumber chahiye'
+• 'Need someone to install a new AC unit before summer'
+• 'Door is broken and needs carpentry repair'" required
+                                  style="resize:none;"></textarea>
+                        <div class="d-flex justify-content-between mt-1">
+                            <small class="text-muted">Minimum 20 characters</small>
+                            <small class="text-muted"><span id="charCount">0</span>/500</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label as-label">Your Location</label>
+                        <div class="input-group as-input-group">
+                            <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                            <input type="text" name="location" class="form-control as-input"
+                                   placeholder="e.g. Arera Colony, Bhopal" value="Bhopal">
+                        </div>
+                    </div>
+
+                    <!-- AI Preview Box -->
+                    <div class="ai-preview-box mb-4" id="aiPreviewBox" style="display:none;">
+                        <div class="ai-preview-header">
+                            <i class="bi bi-cpu-fill text-warning me-2"></i>
+                            <span>AI Skill Preview</span>
+                            <div class="spinner-border spinner-border-sm text-warning ms-auto" id="aiSpinner"></div>
+                        </div>
+                        <div class="ai-preview-result" id="aiPreviewResult"></div>
+                    </div>
+
+                    <button type="submit" class="btn btn-as-orange btn-lg w-100" id="submitBtn">
+                        <i class="bi bi-cpu me-2"></i>Find Best Workers with AI
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tips Sidebar -->
+        <div class="col-lg-5">
+            <div class="as-card p-4 mb-4">
+                <h6 class="mb-3"><i class="bi bi-lightbulb-fill text-warning me-2"></i>Tips for Better Matches</h6>
+                <ul class="tips-list">
+                    <li><strong>Be specific:</strong> "Water pipe under kitchen sink leaking" is better than "pipe issue"</li>
+                    <li><strong>Mention urgency:</strong> "Urgent" or "ASAP" tells the AI it's time-sensitive</li>
+                    <li><strong>Location helps:</strong> Add your area for faster local matches</li>
+                    <li><strong>Hindi OK:</strong> Our AI understands Hinglish perfectly</li>
+                </ul>
+            </div>
+
+            <div class="as-card p-4">
+                <h6 class="mb-3"><i class="bi bi-grid-fill text-warning me-2"></i>Available Skills</h6>
+                <div class="skill-quick-grid">
+                    {% set all_skills = ['Plumber','Electrician','Carpenter','Painter','Cleaner',
+                                         'AC Mechanic','Mason','Welder','Gardener','Driver',
+                                         'Cook','Computer Technician'] %}
+                    {% for sk in all_skills %}
+                    <span class="skill-quick-tag" onclick="injectSkill('{{ sk }}')">{{ sk }}</span>
+                    {% endfor %}
+                </div>
+                <small class="text-muted mt-2 d-block">Click a skill to add it to your description</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const descEl = document.getElementById('jobDesc');
+const countEl = document.getElementById('charCount');
+const previewBox = document.getElementById('aiPreviewBox');
+const previewResult = document.getElementById('aiPreviewResult');
+const spinner = document.getElementById('aiSpinner');
+
+let debounceTimer;
+
+descEl.addEventListener('input', function() {
+    const len = this.value.length;
+    countEl.textContent = len;
+
+    clearTimeout(debounceTimer);
+    if (len >= 20) {
+        previewBox.style.display = 'block';
+        spinner.style.display = 'inline-block';
+        previewResult.innerHTML = '';
+
+        debounceTimer = setTimeout(() => detectSkillPreview(this.value), 1000);
+    } else {
+        previewBox.style.display = 'none';
+    }
+});
+
+async function detectSkillPreview(text) {
+    try {
+        const resp = await fetch('/api/detect-skill', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({description: text})
+        });
+        const data = await resp.json();
+        spinner.style.display = 'none';
+
+        const conf = data.confidence || 0;
+        const barColor = conf >= 70 ? '#f5a623' : conf >= 40 ? '#3b9edd' : '#6c757d';
+
+        previewResult.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <strong style="font-size:1.1rem">🔍 ${data.skill}</strong>
+                <span class="confidence-badge" style="background:${barColor}22;color:${barColor}">
+                    ${conf}% confidence
+                </span>
+            </div>
+            <div class="progress mb-2" style="height:6px;background:#ffffff22">
+                <div class="progress-bar" style="width:${conf}%;background:${barColor};border-radius:4px;transition:width 0.5s ease"></div>
+            </div>
+            <small class="text-muted">${data.reasoning}</small>
+        `;
+    } catch(e) {
+        spinner.style.display = 'none';
+        previewResult.innerHTML = '<small class="text-muted">Preview unavailable</small>';
+    }
+}
+
+function injectSkill(skill) {
+    const current = descEl.value.trim();
+    if (!current) {
+        descEl.value = `I need a ${skill} for `;
+    } else {
+        descEl.value = current + ` (${skill} required)`;
+    }
+    descEl.dispatchEvent(new Event('input'));
+    descEl.focus();
+}
+
+// Loading state on submit
+document.getElementById('jobForm').addEventListener('submit', function() {
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>AI is matching...';
+});
+</script>
+{% endblock %}

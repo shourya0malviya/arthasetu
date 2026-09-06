@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}Login — ArthaSetu{% endblock %}
+
+{% block content %}
+<div class="auth-page d-flex align-items-center justify-content-center py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5 col-lg-4">
+                <div class="auth-card">
+                    <div class="auth-header text-center mb-4">
+                        <div class="brand-icon mx-auto mb-3" style="width:56px;height:56px;font-size:1.6rem">
+                            <i class="bi bi-lightning-charge-fill"></i>
+                        </div>
+                        <h3 class="auth-title">Welcome Back</h3>
+                        <p class="auth-sub">Login to your ArthaSetu account</p>
+                    </div>
+
+                    <form method="POST" action="{{ url_for('login') }}" novalidate>
+                        <div class="mb-3">
+                            <label class="form-label as-label">Email Address</label>
+                            <div class="input-group as-input-group">
+                                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                <input type="email" name="email" class="form-control as-input"
+                                       placeholder="you@example.com" required>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label as-label">Password</label>
+                            <div class="input-group as-input-group">
+                                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                                <input type="password" name="password" id="passwordInput"
+                                       class="form-control as-input" placeholder="••••••••" required>
+                                <button class="btn btn-outline-secondary" type="button"
+                                        onclick="togglePassword()">
+                                    <i class="bi bi-eye" id="eyeIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-as-orange w-100 btn-lg">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Login
+                        </button>
+                    </form>
+
+                    <div class="text-center mt-4">
+                        <span class="text-muted">Don't have an account? </span>
+                        <a href="{{ url_for('register') }}" class="auth-link">Create one free</a>
+                    </div>
+
+                    <!-- Demo credentials -->
+                    <div class="demo-creds mt-4">
+                        <small class="text-muted d-block text-center mb-2">
+                            <i class="bi bi-info-circle me-1"></i>Demo — register your own account
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function togglePassword() {
+    const inp = document.getElementById('passwordInput');
+    const icon = document.getElementById('eyeIcon');
+    if (inp.type === 'password') {
+        inp.type = 'text';
+        icon.className = 'bi bi-eye-slash';
+    } else {
+        inp.type = 'password';
+        icon.className = 'bi bi-eye';
+    }
+}
+</script>
+{% endblock %}

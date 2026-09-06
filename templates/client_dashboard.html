@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% block title %}Client Dashboard — ArthaSetu{% endblock %}
+
+{% block content %}
+<div class="page-header-bar">
+    <div class="container d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <h2 class="page-title mb-0">
+                <i class="bi bi-speedometer2 me-2 text-warning"></i>Client Dashboard
+            </h2>
+            <p class="text-muted mb-0 mt-1">Welcome back, {{ session.user_name }}</p>
+        </div>
+        <a href="{{ url_for('post_job') }}" class="btn btn-as-orange">
+            <i class="bi bi-plus-lg me-2"></i>Post New Job
+        </a>
+    </div>
+</div>
+
+<div class="container py-4">
+
+    <!-- Stats Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-card-icon" style="background:#f5a62322;color:#f5a623">
+                    <i class="bi bi-briefcase-fill"></i>
+                </div>
+                <div class="stat-card-val">{{ total_jobs }}</div>
+                <div class="stat-card-label">Total Jobs Posted</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-card-icon" style="background:#00d4aa22;color:#00d4aa">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+                <div class="stat-card-val">{{ completed_jobs }}</div>
+                <div class="stat-card-label">Completed Jobs</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-card-icon" style="background:#3b9edd22;color:#3b9edd">
+                    <i class="bi bi-cpu-fill"></i>
+                </div>
+                <div class="stat-card-val">{{ jobs|length }}</div>
+                <div class="stat-card-label">Active Requests</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-card-icon" style="background:#8b5cf622;color:#8b5cf6">
+                    <i class="bi bi-person-check-fill"></i>
+                </div>
+                <div class="stat-card-val">AI</div>
+                <div class="stat-card-label">Smart Matching</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Jobs List -->
+    <div class="as-card">
+        <div class="card-header-custom d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-list-task me-2 text-warning"></i>Your Job Posts</h5>
+        </div>
+
+        {% if jobs %}
+        <div class="table-responsive">
+            <table class="table as-table">
+                <thead>
+                    <tr>
+                        <th>Job Description</th>
+                        <th>AI Detected Skill</th>
+                        <th>Matches</th>
+                        <th>Status</th>
+                        <th>Posted</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for job in jobs %}
+                    <tr>
+                        <td>
+                            <strong>{{ job.title or job.description[:50] + '...' }}</strong>
+                            <br><small class="text-muted">📍 {{ job.location }}</small>
+                        </td>
+                        <td>
+                            {% if job.ai_detected_skill %}
+                            <span class="skill-tag-sm">🔍 {{ job.ai_detected_skill }}</span>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-info bg-opacity-20 text-info border border-info">
+                                {{ job.match_count }} workers
+                            </span>
+                        </td>
+                        <td>
+                            {% set sc = {'open':'warning','matched':'info','completed':'success','cancelled':'danger'} %}
+                            <span class="status-badge status-{{ job.status }}">
+                                {{ job.status.title() }}
+                            </span>
+                        </td>
+                        <td>
+                            <small class="text-muted">
+                                {{ job.posted_at.strftime('%d %b %Y') if job.posted_at else '-' }}
+                            </small>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state text-center py-5">
+            <i class="bi bi-clipboard-plus fs-1 text-muted mb-3 d-block"></i>
+            <h5>No jobs posted yet</h5>
+            <p class="text-muted">Post your first job and let AI find the perfect worker!</p>
+            <a href="{{ url_for('post_job') }}" class="btn btn-as-orange mt-2">
+                <i class="bi bi-plus-lg me-2"></i>Post First Job
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row g-3 mt-2">
+        <div class="col-md-4">
+            <a href="{{ url_for('post_job') }}" class="quick-action-card">
+                <i class="bi bi-plus-circle-fill text-warning fs-2"></i>
+                <strong class="d-block mt-2">Post a Job</strong>
+                <small class="text-muted">AI will find the best worker</small>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="{{ url_for('browse_workers') }}" class="quick-action-card">
+                <i class="bi bi-people-fill text-info fs-2"></i>
+                <strong class="d-block mt-2">Browse Workers</strong>
+                <small class="text-muted">View all available workers</small>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="{{ url_for('admin_dashboard') }}" class="quick-action-card">
+                <i class="bi bi-bar-chart-fill text-success fs-2"></i>
+                <strong class="d-block mt-2">Analytics</strong>
+                <small class="text-muted">Platform overview & stats</small>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

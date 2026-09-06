@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% block title %}Worker Dashboard — ArthaSetu{% endblock %}
+
+{% block content %}
+<div class="page-header-bar">
+    <div class="container d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <h2 class="page-title mb-0">
+                <i class="bi bi-tools me-2 text-warning"></i>Worker Dashboard
+            </h2>
+            <p class="text-muted mb-0 mt-1">Manage your profile and job matches</p>
+        </div>
+        <a href="{{ url_for('update_worker_profile') }}" class="btn btn-as-orange">
+            <i class="bi bi-pencil-fill me-2"></i>Edit Profile
+        </a>
+    </div>
+</div>
+
+<div class="container py-4">
+    <div class="row g-4">
+
+        <!-- Profile Card -->
+        <div class="col-lg-4">
+            <div class="as-card p-0 overflow-hidden">
+                <div class="profile-card-header">
+                    <div class="profile-avatar-lg">
+                        {{ profile.name[:2].upper() if profile else '??' }}
+                    </div>
+                    <h4 class="mt-3 mb-0">{{ profile.name }}</h4>
+                    <span class="skill-badge-result mt-1">{{ profile.skill_category }}</span>
+                    <div class="mt-2">
+                        {% set av = profile.availability if profile else 'offline' %}
+                        {% set av_color = 'success' if av == 'available' else ('warning' if av == 'busy' else 'secondary') %}
+                        <span class="availability-indicator availability-{{ av }}">
+                            <i class="bi bi-circle-fill me-1" style="font-size:0.5rem"></i>
+                            {{ av.title() }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="p-4">
+                    <div class="profile-stats-grid mb-4">
+                        <div class="p-stat">
+                            <span class="p-stat-num">{{ profile.rating or 0 }}</span>
+                            <span class="p-stat-label">Rating ⭐</span>
+                        </div>
+                        <div class="p-stat">
+                            <span class="p-stat-num">{{ profile.experience_years or 0 }}y</span>
+                            <span class="p-stat-label">Experience</span>
+                        </div>
+                        <div class="p-stat">
+                            <span class="p-stat-num">{{ profile.total_jobs or 0 }}</span>
+                            <span class="p-stat-label">Jobs Done</span>
+                        </div>
+                    </div>
+
+                    <div class="profile-info-list">
+                        <div class="p-info-item">
+                            <i class="bi bi-telephone text-warning"></i>
+                            <span>{{ profile.phone or 'Not added' }}</span>
+                        </div>
+                        <div class="p-info-item">
+                            <i class="bi bi-envelope text-warning"></i>
+                            <span>{{ profile.email }}</span>
+                        </div>
+                        <div class="p-info-item">
+                            <i class="bi bi-geo-alt text-warning"></i>
+                            <span>{{ profile.address or profile.city or 'Bhopal' }}</span>
+                        </div>
+                    </div>
+
+                    {% if profile.description %}
+                    <div class="mt-3 p-3" style="background:#ffffff08;border-radius:8px;border:1px solid #ffffff10">
+                        <small class="text-muted d-block mb-1">About Me</small>
+                        <p class="mb-0 small">{{ profile.description }}</p>
+                    </div>
+                    {% endif %}
+
+                    <a href="{{ url_for('update_worker_profile') }}" class="btn btn-outline-warning w-100 mt-3">
+                        <i class="bi bi-pencil me-2"></i>Update Profile
+                    </a>
+                </div>
+            </div>
+
+            <!-- Profile Completion -->
+            {% set fields_filled = namespace(count=0) %}
+            {% if profile.phone %}{% set fields_filled.count = fields_filled.count + 1 %}{% endif %}
+            {% if profile.address %}{% set fields_filled.count = fields_filled.count + 1 %}{% endif %}
+            {% if profile.description %}{% set fields_filled.count = fields_filled.count + 1 %}{% endif %}
+            {% if profile.skill_category and profile.skill_category != 'Other' %}{% set fields_filled.count = fields_filled.count + 1 %}{% endif %}
+            {% if profile.experience_years %}{% set fields_filled.count = fields_filled.count + 1 %}{% endif %}
+            {% set completion = (fields_filled.count / 5 * 100) | int %}
+            <div class="as-card p-3 mt-3">
+                <div class="d-flex justify-content-between mb-2">
+                    <small class="fw-600">Profile Completion</small>
+                    <small class="text-warning">{{ completion }}%</small>
+                </div>
+                <div class="progress" style="height:6px;background:#ffffff15">
+                    <div class="progress-bar bg-warning" style="width:{{ completion }}%;border-radius:4px;transition:width 1s ease"></div>
+                </div>
+                {% if completion < 100 %}
+                <small class="text-muted mt-2 d-block">Complete your profile to get more matches!</small>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Job Matches -->
+        <div class="col-lg-8">
+            <div class="as-card">
+                <div class="card-header-custom">
+                    <h5 class="mb-0">
+                        <i class="bi bi-lightning-fill text-warning me-2"></i>Job Matches from AI
+                        <span class="badge bg-warning text-dark ms-2">{{ job_matches|length }}</span>
+                    </h5>
+                </div>
+
+                {% if job_matches %}
+                <div class="job-matches-list">
+                    {% for match in job_matches %}
+                    <div class="job-match-item">
+                        <div class="d-flex justify-content-between align-items-start gap-3">
+                            <div class="flex-grow-1">
+                                <div class="d-flex gap-2 align-items-center mb-1">
+                                    <span class="skill-tag-sm">{{ match.ai_detected_skill }}</span>
+                                    <span class="match-score-sm">{{ match.match_score|int }}% match</span>
+                                </div>
+                                <h6 class="mb-1">{{ match.title or match.description[:70] + '...' }}</h6>
+                                <div class="d-flex flex-wrap gap-3 mt-2">
+                                    <small><i class="bi bi-person me-1 text-muted"></i>{{ match.client_name }}</small>
+                                    <small><i class="bi bi-geo-alt me-1 text-muted"></i>{{ match.location }}</small>
+                                    <small><i class="bi bi-clock me-1 text-muted"></i>
+                                        {{ match.posted_at.strftime('%d %b %Y') if match.posted_at else '-' }}
+                                    </small>
+                                </div>
+                            </div>
+                            {% if match.client_phone %}
+                            <a href="tel:{{ match.client_phone }}" class="btn btn-as-orange btn-sm">
+                                <i class="bi bi-telephone-fill me-1"></i>Call
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state text-center py-5">
+                    <i class="bi bi-inbox fs-1 text-muted mb-3 d-block"></i>
+                    <h5>No job matches yet</h5>
+                    <p class="text-muted">Complete your profile and set availability to start receiving AI-matched jobs!</p>
+                    <a href="{{ url_for('update_worker_profile') }}" class="btn btn-as-orange mt-2">
+                        <i class="bi bi-person-gear me-2"></i>Complete Profile
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

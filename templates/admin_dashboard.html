@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+{% block title %}Analytics Dashboard — ArthaSetu{% endblock %}
+
+{% block content %}
+<div class="page-header-bar">
+    <div class="container">
+        <h2 class="page-title"><i class="bi bi-bar-chart-fill me-2 text-warning"></i>Platform Analytics</h2>
+        <p class="text-muted mt-1">Overview of ArthaSetu platform activity</p>
+    </div>
+</div>
+
+<div class="container py-4">
+
+    <!-- KPI Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background:#f5a62322;color:#f5a623"><i class="bi bi-person-lines-fill"></i></div>
+                <div class="kpi-num">{{ total_clients }}</div>
+                <div class="kpi-label">Registered Clients</div>
+                <div class="kpi-trend text-success"><i class="bi bi-arrow-up-short"></i> Active users</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background:#3b9edd22;color:#3b9edd"><i class="bi bi-tools"></i></div>
+                <div class="kpi-num">{{ total_workers }}</div>
+                <div class="kpi-label">Skilled Workers</div>
+                <div class="kpi-trend text-success"><i class="bi bi-arrow-up-short"></i> On platform</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background:#00d4aa22;color:#00d4aa"><i class="bi bi-briefcase-fill"></i></div>
+                <div class="kpi-num">{{ total_jobs }}</div>
+                <div class="kpi-label">Jobs Posted</div>
+                <div class="kpi-trend text-info"><i class="bi bi-arrow-up-short"></i> All time</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background:#8b5cf622;color:#8b5cf6"><i class="bi bi-cpu-fill"></i></div>
+                <div class="kpi-num">{{ total_matches }}</div>
+                <div class="kpi-label">AI Matches Made</div>
+                <div class="kpi-trend text-warning"><i class="bi bi-stars"></i> Gemini powered</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- Job Status Breakdown -->
+        <div class="col-md-5">
+            <div class="as-card p-4">
+                <h6 class="mb-4"><i class="bi bi-pie-chart-fill text-warning me-2"></i>Jobs by Status</h6>
+                <canvas id="statusChart" height="220"></canvas>
+            </div>
+        </div>
+
+        <!-- Skill Distribution -->
+        <div class="col-md-7">
+            <div class="as-card p-4">
+                <h6 class="mb-4"><i class="bi bi-bar-chart-fill text-warning me-2"></i>Workers by Skill</h6>
+                <canvas id="skillChart" height="220"></canvas>
+            </div>
+        </div>
+
+        <!-- Top Workers -->
+        <div class="col-md-7">
+            <div class="as-card">
+                <div class="card-header-custom">
+                    <h6 class="mb-0"><i class="bi bi-trophy-fill text-warning me-2"></i>Top Rated Workers</h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table as-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Worker</th>
+                                <th>Skill</th>
+                                <th>Rating</th>
+                                <th>Jobs</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for w in top_workers %}
+                            <tr>
+                                <td><strong>{{ w.name }}</strong></td>
+                                <td><span class="skill-tag-sm">{{ w.skill_category }}</span></td>
+                                <td>
+                                    <span class="text-warning">
+                                        {% for i in range(w.rating|int) %}⭐{% endfor %}
+                                    </span>
+                                    {{ w.rating }}
+                                </td>
+                                <td>{{ w.total_jobs }}</td>
+                                <td>
+                                    <span class="availability-indicator availability-{{ w.availability }}">
+                                        {{ w.availability.title() }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Jobs -->
+        <div class="col-md-5">
+            <div class="as-card">
+                <div class="card-header-custom">
+                    <h6 class="mb-0"><i class="bi bi-clock-history text-warning me-2"></i>Recent Jobs</h6>
+                </div>
+                <div class="recent-jobs-list">
+                    {% for job in recent_jobs %}
+                    <div class="recent-job-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <small class="text-muted">{{ job.client }}</small>
+                                <p class="mb-1 small fw-500">{{ job.title[:50] if job.title else 'Job Request' }}</p>
+                                {% if job.ai_detected_skill %}
+                                <span class="skill-tag-xs">{{ job.ai_detected_skill }}</span>
+                                {% endif %}
+                            </div>
+                            <span class="status-badge status-{{ job.status }}">{{ job.status }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const chartDefaults = {
+    color: '#ffffff99',
+    borderColor: '#ffffff15',
+};
+Chart.defaults.color = '#ffffff99';
+
+// Job Status Donut Chart
+const statusData = {{ job_status | tojson }};
+const statusLabels = Object.keys(statusData);
+const statusValues = Object.values(statusData);
+
+new Chart(document.getElementById('statusChart'), {
+    type: 'doughnut',
+    data: {
+        labels: statusLabels.map(s => s.charAt(0).toUpperCase() + s.slice(1)),
+        datasets: [{
+            data: statusValues,
+            backgroundColor: ['#f5a623','#3b9edd','#00d4aa','#ef4444'],
+            borderWidth: 2,
+            borderColor: '#1a2744'
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'bottom', labels: { color: '#ffffff99', padding: 15 } }
+        },
+        cutout: '65%'
+    }
+});
+
+// Skill Distribution Bar Chart
+const skillData = {{ skill_dist | tojson }};
+new Chart(document.getElementById('skillChart'), {
+    type: 'bar',
+    data: {
+        labels: skillData.map(s => s.skill_category),
+        datasets: [{
+            label: 'Workers',
+            data: skillData.map(s => s.cnt),
+            backgroundColor: '#f5a62388',
+            borderColor: '#f5a623',
+            borderWidth: 1,
+            borderRadius: 6,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { grid: { color: '#ffffff10' }, ticks: { color: '#ffffff99' } },
+            y: { grid: { color: '#ffffff10' }, ticks: { color: '#ffffff99', stepSize: 1 } }
+        }
+    }
+});
+</script>
+{% endblock %}

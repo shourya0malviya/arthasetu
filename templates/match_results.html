@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% block title %}AI Match Results — ArthaSetu{% endblock %}
+
+{% block content %}
+<div class="page-header-bar">
+    <div class="container">
+        <h2 class="page-title">
+            <i class="bi bi-cpu-fill text-warning me-2"></i>AI Match Results
+        </h2>
+    </div>
+</div>
+
+<div class="container py-5">
+
+    <!-- AI Analysis Card -->
+    <div class="ai-result-banner mb-4">
+        <div class="row align-items-center g-3">
+            <div class="col-auto">
+                <div class="ai-result-icon">
+                    <i class="bi bi-cpu-fill"></i>
+                </div>
+            </div>
+            <div class="col">
+                <small class="text-warning fw-600">Gemini AI Analysis</small>
+                <h5 class="mb-1 mt-1">"{{ description[:120] }}{% if description|length > 120 %}...{% endif %}"</h5>
+                <div class="d-flex flex-wrap gap-3 mt-2">
+                    <span class="ai-tag">
+                        <i class="bi bi-tools me-1"></i>Skill: <strong>{{ detected_skill }}</strong>
+                    </span>
+                    <span class="ai-tag">
+                        <i class="bi bi-graph-up me-1"></i>Confidence: <strong>{{ confidence }}%</strong>
+                    </span>
+                    <span class="ai-tag text-muted">
+                        <i class="bi bi-chat-quote me-1"></i>{{ reasoning }}
+                    </span>
+                </div>
+            </div>
+            <div class="col-auto">
+                <div class="confidence-ring">
+                    <svg viewBox="0 0 36 36" class="circular-chart">
+                        <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                        <path class="circle" stroke-dasharray="{{ confidence }}, 100"
+                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                        <text x="18" y="20.35" class="percentage">{{ confidence }}%</text>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results -->
+    {% if matched_workers %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">
+            <i class="bi bi-person-check-fill text-success me-2"></i>
+            {{ matched_workers|length }} Workers Found for "{{ detected_skill }}"
+        </h5>
+        <a href="{{ url_for('post_job') }}" class="btn btn-outline-warning btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Post Another Job
+        </a>
+    </div>
+
+    <div class="row g-4">
+        {% for worker in matched_workers %}
+        <div class="col-md-6 col-lg-4">
+            <div class="worker-result-card {% if loop.first %}top-match{% endif %}">
+                {% if loop.first %}
+                <div class="top-match-badge">
+                    <i class="bi bi-trophy-fill me-1"></i>Best Match
+                </div>
+                {% endif %}
+
+                <div class="d-flex align-items-start gap-3 mb-3">
+                    <div class="worker-avatar-lg">
+                        {{ worker.name[:2].upper() }}
+                    </div>
+                    <div class="flex-grow-1">
+                        <h5 class="mb-0">{{ worker.name }}</h5>
+                        <span class="skill-badge-result">{{ worker.skill_category }}</span>
+                        <div class="mt-1">
+                            {% set av_color = 'success' if worker.availability == 'available' else 'warning' %}
+                            <span class="badge bg-{{ av_color }} bg-opacity-20 text-{{ av_color }} border border-{{ av_color }}">
+                                <i class="bi bi-circle-fill me-1" style="font-size:0.5rem"></i>
+                                {{ worker.availability.title() }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Row -->
+                <div class="worker-stats-row mb-3">
+                    <div class="w-stat">
+                        <i class="bi bi-star-fill text-warning"></i>
+                        <span>{{ worker.rating }}</span>
+                        <small>Rating</small>
+                    </div>
+                    <div class="w-stat">
+                        <i class="bi bi-briefcase-fill text-info"></i>
+                        <span>{{ worker.experience_years }}y</span>
+                        <small>Experience</small>
+                    </div>
+                    <div class="w-stat">
+                        <i class="bi bi-check2-all text-success"></i>
+                        <span>{{ worker.total_jobs }}</span>
+                        <small>Jobs Done</small>
+                    </div>
+                </div>
+
+                {% if worker.description %}
+                <p class="worker-desc-text">{{ worker.description[:100] }}...</p>
+                {% endif %}
+
+                <div class="d-flex align-items-center gap-2 mt-3">
+                    <i class="bi bi-geo-alt text-muted"></i>
+                    <small class="text-muted">{{ worker.address or worker.city }}</small>
+                </div>
+
+                <div class="mt-3 d-flex gap-2">
+                    <a href="tel:{{ worker.phone }}" class="btn btn-as-orange flex-grow-1">
+                        <i class="bi bi-telephone-fill me-1"></i>{{ worker.phone or 'Call Now' }}
+                    </a>
+                    <a href="https://wa.me/91{{ worker.phone }}" target="_blank"
+                       class="btn btn-success btn-icon">
+                        <i class="bi bi-whatsapp"></i>
+                    </a>
+                </div>
+
+                <!-- Rating Form -->
+                <div class="mt-3 border-top pt-3">
+                    <form method="POST" action="{{ url_for('rate_worker', job_id=job_id, worker_id=worker.worker_id) }}"
+                          class="d-flex gap-2 align-items-center">
+                        <select name="rating" class="form-select form-select-sm as-input" style="width:auto">
+                            <option value="">Rate</option>
+                            <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
+                            <option value="4">⭐⭐⭐⭐ Good</option>
+                            <option value="3">⭐⭐⭐ Average</option>
+                            <option value="2">⭐⭐ Poor</option>
+                            <option value="1">⭐ Terrible</option>
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-outline-warning">
+                            <i class="bi bi-send"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <!-- No Workers Found -->
+    <div class="empty-state text-center py-5">
+        <div class="empty-icon mb-4"><i class="bi bi-search fs-1 text-muted"></i></div>
+        <h4>No workers found for "{{ detected_skill }}"</h4>
+        <p class="text-muted">No available workers matching this skill are in our database yet.</p>
+        <div class="d-flex gap-3 justify-content-center mt-4">
+            <a href="{{ url_for('post_job') }}" class="btn btn-as-orange">Try Different Description</a>
+            <a href="{{ url_for('browse_workers') }}" class="btn btn-outline-light">Browse All Workers</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
