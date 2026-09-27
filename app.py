@@ -35,7 +35,7 @@ app.config['MYSQL_SSL']         = True
 mysql = MySQL(app)
 
 # ── Gemini AI configuration ────────────────────────────────
-GEMINI_API_KEY = 'yahan_apni_gemini_key_paste_karo'
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
 
