@@ -28,7 +28,11 @@ app.config['MYSQL_USER']        = '2FhJhaRgeitrSs1.root'
 app.config['MYSQL_PASSWORD']    = 'JHhDYvizVL5LDWXp'
 app.config['MYSQL_DB']          = 'test'
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
-app.config['MYSQL_SSL']         = True
+app.config['MYSQL_CUSTOM_OPTIONS'] = {
+    'ssl': {
+        'ca': '/etc/ssl/certs/ca-certificates.crt'
+    }
+}
 
 
 
