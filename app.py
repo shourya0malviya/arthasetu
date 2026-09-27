@@ -19,14 +19,17 @@ import google.generativeai as genai
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'arthasetu_dev_secret_2024')
 
-# ── MySQL configuration ────────────────────────────────────
+# ── MySQL configuration # ── MySQL configuration ────────────────────────────────────
 app.secret_key = 'arthasetu2024secret'
 
-app.config['MYSQL_HOST']        = 'localhost'
-app.config['MYSQL_USER']        = 'root'
-app.config['MYSQL_PASSWORD']    = ''
-app.config['MYSQL_DB']          = 'arthasetu_db'
-app.config['MYSQL_CURSORCLASS'] = 'DictCursor'   # ← yeh line ZAROOR rakhna!
+app.config['MYSQL_HOST']        = 'gateway01.ap-northeast-1.prod.aws.tidbcloud.com'
+app.config['MYSQL_PORT']        = 4000
+app.config['MYSQL_USER']        = '2FhJhaRgeitrSs1.root'
+app.config['MYSQL_PASSWORD']    = 'JHhDYvizVL5LDWXp'
+app.config['MYSQL_DB']          = 'test'
+app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
+app.config['MYSQL_SSL']         = True
+
 
 
 mysql = MySQL(app)
